@@ -15,29 +15,26 @@ jobs:
         echo "PASSWORD_CHROME=123456" >> $GITHUB_ENV
         echo "CHROME_REMOTE_DESKTOP_URL=https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb" >> $GITHUB_ENV
         echo "FIREFOX_ESR_PACKAGE=firefox-esr" >> $GITHUB_ENV
-        echo "CUSTOM_HOSTNAME=mycustomhostname" >> $GITHUB_ENV
 
     - name: Update and upgrade system packages
       run: sudo apt-get update && sudo apt-get upgrade -y
 
     - name: Create user for Chrome Remote Desktop
       run: |
-        sudo useradd -m $USERNAME_CHROME
-        echo "$USERNAME_CHROME:$PASSWORD_CHROME" | sudo chpasswd
+        sudo useradd -m ${{ env.USERNAME_CHROME }}
+        echo "${{ env.USERNAME_CHROME }}:${{ env.PASSWORD_CHROME }}" | sudo chpasswd
+        sudo usermod -aG sudo ${{ env.USERNAME_CHROME }}
         sudo sed -i 's/\/bin\/sh/\/bin\/bash/g' /etc/passwd
 
     - name: Install Chrome Remote Desktop
       run: |
-        wget -q --show-progress $CHROME_REMOTE_DESKTOP_URL
-        sudo dpkg --install $(basename $CHROME_REMOTE_DESKTOP_URL) || sudo apt-get install --fix-broken -y
-        rm $(basename $CHROME_REMOTE_DESKTOP_URL)
-
-    - name: Clean up Chrome Remote Desktop installation files
-      run: rm -rf $(basename $CHROME_REMOTE_DESKTOP_URL)
+        wget -q --show-progress ${{ env.CHROME_REMOTE_DESKTOP_URL }}
+        sudo dpkg --install $(basename ${{ env.CHROME_REMOTE_DESKTOP_URL }}) || sudo apt-get install --fix-broken -y
+        rm $(basename ${{ env.CHROME_REMOTE_DESKTOP_URL }})
 
     - name: Install XFCE desktop environment
       run: |
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes -y xfce4 desktop-base dbus-x11 xscreensaver
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes xfce4 desktop-base dbus-x11 xscreensaver
 
     - name: Set up Chrome Remote Desktop session
       run: |
@@ -47,25 +44,25 @@ jobs:
       run: |
         sudo add-apt-repository -y ppa:mozillateam/ppa
         sudo apt-get update
-        sudo apt-get install -y $FIREFOX_ESR_PACKAGE
+        sudo apt-get install -y ${{ env.FIREFOX_ESR_PACKAGE }}
 
     - name: Set up Chrome Remote Desktop with PIN
       run: |
         sudo apt-get install -y expect
         echo '#!/usr/bin/expect -f' > /tmp/chrome_remote_setup.exp
         echo 'set timeout -1' >> /tmp/chrome_remote_setup.exp
-        echo 'spawn /opt/google/chrome-remote-desktop/start-host --code="4/4/0AdLIrYdHhVk7d9pK5YVkhxifXS2KSpTdixfbvdIAH8ACJ_W8jEGg2g2dZo_loWgcc492RQ" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=mycustomhostname --user-name=user1' >> /tmp/chrome_remote_setup.exp
+        echo 'spawn DISPLAY= /opt/google/chrome-remote-desktop/start-host --code="4/0AdLIrYfD8kujdITvwjPW3RjyFovcmg1tFj-wDHhF4IxTnqftgvCb4AR8vU-2mYZX9xPF1g" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$(hostname)' >> /tmp/chrome_remote_setup.exp
         echo 'expect "Enter a PIN of at least six digits:"' >> /tmp/chrome_remote_setup.exp
+        echo 'send -- "123456\r"' >> /tmp/chrome_remote_setup.exp
+        echo 'expect "Enter the same PIN again:"' >> /tmp/chrome_remote_setup.exp
         echo 'send -- "123456\r"' >> /tmp/chrome_remote_setup.exp
         echo 'expect eof' >> /tmp/chrome_remote_setup.exp
         chmod +x /tmp/chrome_remote_setup.exp
         sudo /tmp/chrome_remote_setup.exp
 
-
     - name: Continuous Run
       run: |
         while true; do
           echo "Continuous running..."
-          # Add your commands here
           sleep 120
         done
