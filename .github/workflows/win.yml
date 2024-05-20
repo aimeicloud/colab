@@ -40,8 +40,6 @@ jobs:
       run: |
         echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" | sudo tee /etc/chrome-remote-desktop-session
 
-    - name: Disable lightdm service
-      run: sudo systemctl disable lightdm.service
 
     - name: Install Firefox ESR
       run: |
