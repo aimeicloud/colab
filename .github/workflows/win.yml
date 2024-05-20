@@ -39,18 +39,27 @@ jobs:
         Set-LocalUser -Name "runneradmin" -Password $password
       shell: pwsh
 
-    - name: Run PowerShell Command with PIN
+    - name: Run PowerShell Command with Auto PIN Entry
       run: |
         $pin = "123456"
         $code = "4/0AdLIrYfzYemeKn1Br_3TNfzDn2hzDSj7xud9iKE-R4TN2EKfohiiQMfxnqny2B8XESUMPQ"
         $redirectUrl = "https://remotedesktop.google.com/_/oauthredirect"
         $name = $Env:COMPUTERNAME
+        
+        # Start remoting_start_host.exe process
         $startInfo = New-Object System.Diagnostics.ProcessStartInfo
         $startInfo.FileName = "${Env:PROGRAMFILES(X86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
         $startInfo.Arguments = "--code=$code --redirect-url=$redirectUrl --name=$name"
         $startInfo.RedirectStandardInput = $true
         $startInfo.UseShellExecute = $false
         $process = [System.Diagnostics.Process]::Start($startInfo)
-        $process.StandardInput.WriteLine($pin)
+        
+        # Wait for the process to be ready for input
+        Start-Sleep -Seconds 5
+        
+        # Use SendKeys to send the PIN
+        Add-Type -AssemblyName System.Windows.Forms
+        [System.Windows.Forms.SendKeys]::SendWait("$pin{ENTER}")
+        
         $process.WaitForExit()
       shell: pwsh
