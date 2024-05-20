@@ -6,12 +6,12 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Set up environment variables
       run: |
-        echo "USERNAME_CHROME=user" >> $GITHUB_ENV
+        echo "USERNAME_CHROME=user1" >> $GITHUB_ENV
         echo "PASSWORD_CHROME=123456" >> $GITHUB_ENV
         echo "PIN=123456" >> $GITHUB_ENV
         echo "CHROME_REMOTE_DESKTOP_URL=https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb" >> $GITHUB_ENV
