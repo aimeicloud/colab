@@ -13,7 +13,6 @@ jobs:
       run: |
         echo "USERNAME_CHROME=user1" >> $GITHUB_ENV
         echo "PASSWORD_CHROME=123456" >> $GITHUB_ENV
-        echo "PIN=123456" >> $GITHUB_ENV
         echo "CHROME_REMOTE_DESKTOP_URL=https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb" >> $GITHUB_ENV
         echo "FIREFOX_ESR_PACKAGE=firefox-esr" >> $GITHUB_ENV
 
@@ -49,17 +48,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y $FIREFOX_ESR_PACKAGE
 
-    - name: Install recommended XFCE software and tools
-      run: |
-        sudo apt-get install -y software-properties-common thunar-archive-plugin thunar-media-tags-plugin xarchiver unzip rar gnome-terminal
-
-    - name: Clean up
-      run: |
-        sudo apt-get autoremove -y
-        sudo apt-get autoclean -y
-
     - name: Set up Chrome Remote Desktop with PIN
       run: |
+        PIN=$(generate_pin) # Assuming you have a function or command to generate the PIN
         {
           echo $PIN
           echo $PIN
