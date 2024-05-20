@@ -1,0 +1,45 @@
+name: Cl
+
+on: 
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Download Chrome Remote Desktop Host MSI
+      run: |
+        $url = "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi"
+        $output = "chromeremotedesktophost.msi"
+        Invoke-WebRequest -Uri $url -OutFile $output
+      shell: pwsh
+
+    - name: Install Chrome Remote Desktop Host
+      run: |
+        Start-Process msiexec.exe -ArgumentList '/i chromeremotedesktophost.msi /qn' -NoNewWindow -Wait
+      shell: pwsh
+
+    - name: Enable TS
+      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+      shell: pwsh
+
+    - name: Enable Remote Desktop Firewall Rule
+      run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+      shell: pwsh
+
+    - name: Enable User Authentication for RDP
+      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+      shell: pwsh
+
+    - name: Set Local User Password
+      run: |
+        $password = ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force
+        Set-LocalUser -Name "runneradmin" -Password $password
+      shell: pwsh
+
+    - name: Run PowerShell Command
+      run: |
+        & "${Env:PROGRAMFILES(X86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe" --code="4/0AdLIrYfzYemeKn1Br_3TNfzDn2hzDSj7xud9iKE-R4TN2EKfohiiQMfxnqny2B8XESUMPQ" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$Env:COMPUTERNAME
+      shell: pwsh
