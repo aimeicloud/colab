@@ -32,6 +32,9 @@ jobs:
         sudo dpkg --install $(basename $CHROME_REMOTE_DESKTOP_URL) || sudo apt-get install --fix-broken -y
         rm $(basename $CHROME_REMOTE_DESKTOP_URL)
 
+    - name: Clean up Chrome Remote Desktop installation files
+      run: rm -rf $(basename $CHROME_REMOTE_DESKTOP_URL)
+
     - name: Install XFCE desktop environment
       run: |
         sudo DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes -y xfce4 desktop-base dbus-x11 xscreensaver
@@ -39,7 +42,6 @@ jobs:
     - name: Set up Chrome Remote Desktop session
       run: |
         echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" | sudo tee /etc/chrome-remote-desktop-session
-
 
     - name: Install Firefox ESR
       run: |
@@ -61,4 +63,12 @@ jobs:
         {
           echo $PIN
           echo $PIN
-        } | sudo /opt/google/chrome-remote-desktop/start-host --code="4/0AdLIrYdkHd-8ku69yZcFxIDakKY-HAii3p40CHIkDdxuRpWoCwcDk8lanJpKp0KdovqNuA" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$(hostname)
+        } | sudo /opt/google/chrome-remote-desktop/start-host --code="4/4/0AdLIrYdHhVk7d9pK5YVkhxifXS2KSpTdixfbvdIAH8ACJ_W8jEGg2g2dZo_loWgcc492RQ" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$(hostname) --user-name=$USERNAME_CHROME
+
+    - name: Continuous Run
+      run: |
+        while true; do
+          echo "Continuous running..."
+          # Add your commands here
+          sleep 120
+        done
