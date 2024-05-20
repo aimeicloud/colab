@@ -50,11 +50,15 @@ jobs:
 
     - name: Set up Chrome Remote Desktop with PIN
       run: |
-        PIN=$(generate_pin) # Assuming you have a function or command to generate the PIN
-        {
-          echo $PIN
-          echo $PIN
-        } | sudo /opt/google/chrome-remote-desktop/start-host --code="4/4/0AdLIrYdHhVk7d9pK5YVkhxifXS2KSpTdixfbvdIAH8ACJ_W8jEGg2g2dZo_loWgcc492RQ" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$(hostname) --user-name=$USERNAME_CHROME
+        sudo apt-get install -y expect
+        echo '#!/usr/bin/expect -f' > /tmp/chrome_remote_setup.exp
+        echo 'set timeout -1' >> /tmp/chrome_remote_setup.exp
+        echo 'spawn /opt/google/chrome-remote-desktop/start-host --code="4/4/0AdLIrYdHhVk7d9pK5YVkhxifXS2KSpTdixfbvdIAH8ACJ_W8jEGg2g2dZo_loWgcc492RQ" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=[hostname] --user-name=$USERNAME_CHROME' >> /tmp/chrome_remote_setup.exp
+        echo 'expect "Enter a PIN of at least six digits:"' >> /tmp/chrome_remote_setup.exp
+        echo 'send -- "123456\r"' >> /tmp/chrome_remote_setup.exp
+        echo 'expect eof' >> /tmp/chrome_remote_setup.exp
+        chmod +x /tmp/chrome_remote_setup.exp
+        sudo /tmp/chrome_remote_setup.exp
 
     - name: Continuous Run
       run: |
