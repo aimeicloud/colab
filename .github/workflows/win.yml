@@ -6,61 +6,20 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Download Chrome Remote Desktop Host MSI
-      run: |
-        $url = "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi"
-        $output = "chromeremotedesktophost.msi"
-        Invoke-WebRequest -Uri $url -OutFile $output
-      shell: pwsh
+    - name: Download Chrome Remote Desktop Host DEB
+      run: wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
 
     - name: Install Chrome Remote Desktop Host
       run: |
-        Start-Process msiexec.exe -ArgumentList '/i chromeremotedesktophost.msi /qn' -NoNewWindow -Wait
-      shell: pwsh
+        sudo apt-get update
+        sudo apt-get install --assume-yes ./chrome-remote-desktop_current_amd64.deb
 
-    - name: Enable TS
-      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
-      shell: pwsh
-
-    - name: Enable Remote Desktop Firewall Rule
-      run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-      shell: pwsh
-
-    - name: Enable User Authentication for RDP
-      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
-      shell: pwsh
-
-    - name: Set Local User Password
+    - name: Set up Chrome Remote Desktop with PIN
       run: |
-        Start-Sleep -Seconds 10
-        $password = ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force
-        Set-LocalUser -Name "runneradmin" -Password $password
-      shell: pwsh
-
-    - name: Run PowerShell Command with Auto PIN Entry
-      run: |
-        $pin = "123456"
-        $code = "4/0AdLIrYe2mqykWrtV5MisFXRW904MnJSbVr5x70fapFU_DGQZq-78xoN_SR9_bVCs5UrgGg"
-        $redirectUrl = "https://remotedesktop.google.com/_/oauthredirect"
-        $name = $Env:COMPUTERNAME
-
-        # Start remoting_start_host.exe process
-        $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-        $startInfo.FileName = "${Env:PROGRAMFILES(X86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
-        $startInfo.Arguments = "--code=$code --redirect-url=$redirectUrl --name=$name"
-        $startInfo.RedirectStandardInput = $true
-        $startInfo.UseShellExecute = $false
-        $process = [System.Diagnostics.Process]::Start($startInfo)
-        
-        # Wait for the process to be ready for input
-        Start-Sleep -Seconds 15
-        
-        # Use SendKeys to send the PIN
-        Add-Type -AssemblyName System.Windows.Forms
-        [System.Windows.Forms.SendKeys]::SendWait("$pin{ENTER}")
-        
-        $process.WaitForExit()
-      shell: pwsh
+        {
+          echo 123456
+          echo 123456
+        } | DISPLAY= /opt/google/chrome-remote-desktop/start-host --code="4/0AdLIrYdkHd-8ku69yZcFxIDakKY-HAii3p40CHIkDdxuRpWoCwcDk8lanJpKp0KdovqNuA" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$(hostname)
