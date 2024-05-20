@@ -39,7 +39,18 @@ jobs:
         Set-LocalUser -Name "runneradmin" -Password $password
       shell: pwsh
 
-    - name: Run PowerShell Command
+    - name: Run PowerShell Command with PIN
       run: |
-        & "${Env:PROGRAMFILES(X86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe" --code="4/0AdLIrYfzYemeKn1Br_3TNfzDn2hzDSj7xud9iKE-R4TN2EKfohiiQMfxnqny2B8XESUMPQ" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$Env:COMPUTERNAME
+        $pin = "123456"
+        $code = "4/0AdLIrYfzYemeKn1Br_3TNfzDn2hzDSj7xud9iKE-R4TN2EKfohiiQMfxnqny2B8XESUMPQ"
+        $redirectUrl = "https://remotedesktop.google.com/_/oauthredirect"
+        $name = $Env:COMPUTERNAME
+        $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $startInfo.FileName = "${Env:PROGRAMFILES(X86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
+        $startInfo.Arguments = "--code=$code --redirect-url=$redirectUrl --name=$name"
+        $startInfo.RedirectStandardInput = $true
+        $startInfo.UseShellExecute = $false
+        $process = [System.Diagnostics.Process]::Start($startInfo)
+        $process.StandardInput.WriteLine($pin)
+        $process.WaitForExit()
       shell: pwsh
